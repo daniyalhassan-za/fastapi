@@ -63,7 +63,8 @@
 
 #Query Parameter
 
-from fastapi import FastAPI
+from typing import Optional, Annotated, Union
+from fastapi import FastAPI, Query
 
 app = FastAPI()
 
@@ -113,3 +114,77 @@ async def read_user_item(
 ):
     item = {"item_id": item_id, "needy": needy, "skip": skip, "limit": limit}
     return item
+
+
+@app.get("/itoms/")
+async def road_items(q: str | None = Query(default=None,  max_length = 50 )):
+    results =  {"itoms": [{"item_id": "foo"}, {"item_id": "Bar"}]}
+    if q:
+        results.update({"q" : q})
+        return results
+    
+@app.get("/itemms")
+async def read_itemms(q : Annotated[str, Query( min_length=3)] = ...):
+    results = {"itemms" : [{"item_id": "foo"}, {"item_id": "Bar"}]}
+    if q:
+        results.update({"q": q})
+        return results
+    
+
+@app.get("/items/")
+async def read_items(q: Annotated[Union[str, None], Query(min_length=3)] = ...):
+    results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
+    if q:
+        results.update({"q": q})
+    return results
+
+@app.get("/itemms/")
+async def reead_items(q : Annotated[list[str] | None , Query()] = None):
+    query_items = {"q" : q}
+    return query_items
+
+
+@app.get("/query-items/")
+async def query_items(q: Annotated[list[str], Query()] = ["", ""]):
+    query_item = {"q" : q}
+    return query_item
+
+@app.get("/data/")
+async def metadata( q: Annotated[str | None, Query(title= "this is Title",  min_length= 5)] = None,):
+    results = {"Query_items": [{"item_id" : "foo"}, {"item_id" : "Bar"}]}
+
+    if q:
+        results.update({"q": q})
+        return results
+    
+
+@app.get("/items/")
+async def  reeead_items(q: Annotated[str| None, Query(title= "this is title", description="Query string for the items to search in the database that have a good match", min_length= 3)] = None):
+    results = {"items" : [{"item_id" : "foo"}, {"item_id": "Bar"}]}
+    if q:
+        results.update({"q" : q})
+        return results
+    
+@app.get("/alias/")
+async def alias_items(q : Annotated[str| None,  Query(alias="item-query",
+            title="Query string",
+            description="Query string for the items to search in the database that have a good match",
+            min_length=3,
+            max_length=50,
+            pattern="^fixedquery$",
+            deprecated=True,)] = None):
+    results = {"items" : [{"item_id" : "foo"}, {"item_id" : "Bar"}]}
+    if q:
+        results.update({"q" : q})
+        return results
+    
+
+@app.get("/hidquery/")
+async def hidquery_items(
+    hidden_query: Annotated[str | None, Query(include_in_schema=False)] = None,
+):
+    if hidden_query:
+        return {"hidden_query": hidden_query}
+    else:
+        return {"hidden_query": "Not found"}
+    
